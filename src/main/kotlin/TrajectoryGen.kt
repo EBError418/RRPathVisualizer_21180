@@ -4,7 +4,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.MecanumConstraints
-import java.lang.Thread.sleep
+
 
 object TrajectoryGen {
     // Remember to set these constraints to the same values as your DriveConstants.java file in the quickstart
@@ -28,14 +28,15 @@ object TrajectoryGen {
         // Small Example Routine
         builder1
             .strafeLeft(24.0)
-            .splineToSplineHeading(Pose2d(-24.0, -36.0, -90.0.toRadians), 0.0)
-            //.splineToSplineHeading(Pose2d(-42.0, -42.06, 135.0.toRadians), -45.0.toRadians)
+            .splineToSplineHeading(Pose2d(-24.0, -36.0, -80.0.toRadians), 0.0)
+            .splineToSplineHeading(Pose2d(-24.0 + 5, -33.0, -70.0.toRadians), 70.0.toRadians)
             //.splineTo(Vector2d(-48.0 + 6, -36.0 - 6), -45.0.toRadians)
             //.splineTo(Vector2d(-24.0  + 2, -36.0 + 5.6), 90.0.toRadians + 20.0.toRadians)
-            .splineToSplineHeading(Pose2d(-24.0  + 2, -36.0 + 5.6, -90.0.toRadians + 20.0.toRadians), 90.0.toRadians + 0.0.toRadians);
+            .splineToLinearHeading(Pose2d(-24.0  + 2, -36.0 + 5.6, -70.0.toRadians), 70.0.toRadians);
+            //.lineToConstantHeading(Vector2d(-24.0  + 2.0,-36.0 + 5.6));
         list.add(builder1.build())
-
-        for (i in 0 until 4) {
+/*
+        for (i in 0 until 2) {
             val start2Pose = Pose2d(-24.0 + 2, -36.0 + 5.6, -90.0.toRadians + 20.0.toRadians)
             val builder2 = TrajectoryBuilder(start2Pose, startPose.heading, combinedConstraints)
             builder2
@@ -53,7 +54,10 @@ object TrajectoryGen {
 
         }
 
+ */
+
         // high junction for 5th cone
+        /*
         val start2Pose = Pose2d(-24.0 + 2, -36.0 + 5.6, -90.0.toRadians + 20.0.toRadians)
         val builder2 = TrajectoryBuilder(start2Pose, startPose.heading, combinedConstraints)
         builder2
@@ -70,14 +74,28 @@ object TrajectoryGen {
         list.add(builder2.build())
         list.add(builder3.build())
 
+         */
+        //Pose2d(-2 * Params.HALF_MAT + armX, -2 * Params.HALF_MAT + armY, dropOffAngle);
+        val start2Pose = Pose2d(-24.0 + 2, -24.0 - 5.6, -90.0.toRadians + 20.0.toRadians)
         // parking
-        val parkPose = Pose2d(-36.0, -36.0, -180.0.toRadians)
+        val p2 = Pose2d(-2.5 * 12, -3 * 12.0, -180.0.toRadians)
+        var p3 = Pose2d(-36.0, - 36 - 10.0, -180.0.toRadians)
+        val parkPose = Pose2d(-36.0, -36.0 - 24, -180.0.toRadians)
 
-        val builder4 = TrajectoryBuilder(hjPose, startPose.heading, combinedConstraints)
+        /*
+                traj1 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .splineToSplineHeading(poseParkingEnd1, parkingEndTangent)
+                .splineToSplineHeading(poseParking, parkingEndTangent)
+                .build();
+        drive.followTrajectory(traj1);
+         */
+        val builder4 = TrajectoryBuilder(start2Pose, startPose.heading, combinedConstraints)
         builder4
-            .lineToLinearHeading(parkPose);
+            .splineToSplineHeading(p2, -180.0.toRadians)
+            .splineToSplineHeading(p3, -90.0.toRadians)
+            .splineToSplineHeading(parkPose, -90.0.toRadians)
 
-        list.add(builder4.build())
+        //list.add(builder4.build())
         return list
     }
 
