@@ -4,9 +4,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.MecanumConstraints
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.tan
+import kotlin.math.*
 
 
 object TrajectoryGen {
@@ -86,12 +84,38 @@ object TrajectoryGen {
         val fF = Pose2d(Fx, Fy, (-90.0/2.0 + alpha/2.0 - 45.0).toRadians)
         val aA = Pose2d(Ax +0.0, Ay+0.0, (-90 + alpha).toRadians)
 
+        // use circle function for points - xX1
+        val R = ao
+        val Ox = Bx
+        val Oy = By + R
+        val X1 = (Bx+Fx)/2
+        val Y1 = -sqrt(R*R - (X1-Ox)*(X1-Ox)) + Oy
+        val EndT1 = acos((Oy - Y1) / R)
+        // circle function: (X -Ox)^2 + (Y - Oy)^2 = R^2
+        // or:  Y = sqrt(R^2 - (X-Ox)^2) + Oy
+        // endTangent: acos((Oy - Y)/R)
+        val xX1 = Pose2d(X1, Y1, (-90.0 + alpha / 4.0).toRadians)
+
+        print(" / Ox = ")
+        print( Ox)
+        print(" / Oy = ")
+        print( Oy)
+        print(" / X1 = ")
+        print( X1)
+        print(" / Y1 = ")
+        print( Y1)
+        print("  / ")
+        print(" / endt = ")
+        print( Math.toDegrees(EndT1))
+        print("  / ")
 
 
         // Small Example Routine
         builder1
             .strafeLeft(24.0)
             .splineToSplineHeading(bB, 0.0)
+            .splineToSplineHeading(xX1, EndT1)
+
             .splineToSplineHeading(fF, (90.0 + alpha).toRadians / 2.0)
             .splineToSplineHeading(aA, (90.0 +  alpha).toRadians);
 
