@@ -4,7 +4,11 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.MecanumConstraints
+import javafx.scene.chart.Axis
 import java.lang.Thread.sleep
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tan
 
 object TrajectoryGen {
     // Remember to set these constraints to the same values as your DriveConstants.java file in the quickstart
@@ -22,18 +26,71 @@ object TrajectoryGen {
 
         val builder1 = TrajectoryBuilder(startPose, startPose.heading, combinedConstraints)
 
-//        builder1.splineTo(Vector2d(-48.0, -36.0), -45.0.toRadians)
+
+        val armLength = 7.0 // in inch
+        val alpha = 30.0
+        val beta = alpha / 2.0
+
+        // add calculate equations here
+        val eg = 12.0
+        val cg = eg / cos(alpha.toRadians)
+        val ag = armLength
+        val ac = cg - ag
+        val ao = ac * tan(beta.toRadians)
+        val bo = ao
+        val fo = ao
+        val ax = 7 * sin(alpha.toRadians)
+        val gx = 7 * cos(alpha.toRadians)
+        val bc = ac
+        val ce = eg * tan(alpha.toRadians)
+        val be = ce - bc
+        val co = ac / cos(beta.toRadians)
+        val cVx = -24 + ce
+        val cf = co - fo
+        val fh = cf * bo / co
+        val ch = cf * bc / co
+
+
+
+
+
+        // update below 6 variable values
+        val Ax = ax - 24
+        val Ay = -24 - gx
+        val Fx = cVx - ch
+        val Fy = fh - 36
+        val Bx = be - 24
+        val By = -36.0
+
+        print("Bx = ")
+        print( Bx)
+        print(" / By = ")
+        print( By)
+        print(" / Fx = ")
+        print( Fx)
+        print(" / Fy = ")
+        print( Fy)
+        print(" / Ax = ")
+        print( Ax)
+        print(" / Ay = ")
+        print( Ay)
+        print("  / ")
+
+        val aA = Pose2d(Ax, Ay, (-90.0).toRadians)
+        val fF = Pose2d(Fx, Fy, (-90.0 + alpha / 2.0).toRadians)
+        val bB = Pose2d(Bx, By, -(90 - alpha).toRadians)
 
 
         // Small Example Routine
         builder1
             .strafeLeft(24.0)
-            .splineToSplineHeading(Pose2d(-24.0, -36.0, -90.0.toRadians), 0.0)
-            //.splineToSplineHeading(Pose2d(-42.0, -42.06, 135.0.toRadians), -45.0.toRadians)
-            //.splineTo(Vector2d(-48.0 + 6, -36.0 - 6), -45.0.toRadians)
-            //.splineTo(Vector2d(-24.0  + 2, -36.0 + 5.6), 90.0.toRadians + 20.0.toRadians)
-            .splineToSplineHeading(Pose2d(-24.0  + 2, -36.0 + 5.6, -90.0.toRadians + 20.0.toRadians), 90.0.toRadians + 0.0.toRadians);
+
+            .splineToSplineHeading(bB, 0.0)
+            .splineToSplineHeading(fF, (180.0 - alpha).toRadians / 2.0)
+            //.splineToSplineHeading(aA, (180.0 - alpha).toRadians);
         list.add(builder1.build())
+
+        /*
 
         for (i in 0 until 4) {
             val start2Pose = Pose2d(-24.0 + 2, -36.0 + 5.6, -90.0.toRadians + 20.0.toRadians)
@@ -41,16 +98,14 @@ object TrajectoryGen {
             builder2
                 .lineToLinearHeading(Pose2d(-12.0, -62.0, -90.0.toRadians));
 
-            sleep(500);
+
             val start3Pose = Pose2d(-12.0, -62.0, -90.0.toRadians)
             val builder3 = TrajectoryBuilder(start3Pose, startPose.heading, combinedConstraints)
             builder3
                 .lineToLinearHeading(start2Pose);
-            sleep(500);
 
-            list.add(builder2.build())
-            list.add(builder3.build())
-
+           // list.add(builder2.build())
+            //list.add(builder3.build())
         }
 
         // high junction for 5th cone
@@ -67,8 +122,8 @@ object TrajectoryGen {
             .lineToLinearHeading(hjPose);
         sleep(500);
 
-        list.add(builder2.build())
-        list.add(builder3.build())
+        //list.add(builder2.build())
+        //list.add(builder3.build())
 
         // parking
         val parkPose = Pose2d(-36.0, -36.0, -180.0.toRadians)
@@ -77,12 +132,14 @@ object TrajectoryGen {
         builder4
             .lineToLinearHeading(parkPose);
 
-        list.add(builder4.build())
+        //list.add(builder4.build())
+
+         */
         return list
     }
 
     fun drawOffbounds() {
-        GraphicsUtil.fillRect(Vector2d(0.0, -63.0), 18.0, 18.0) // robot against the wall
+        GraphicsUtil.fillRect(Vector2d(0.0, -63.0), 14.0, 15.0) // robot against the wall
     }
 }
 
