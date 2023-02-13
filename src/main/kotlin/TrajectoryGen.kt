@@ -4,6 +4,9 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.MecanumConstraints
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tan
 
 
 object TrajectoryGen {
@@ -15,27 +18,102 @@ object TrajectoryGen {
 
     private val combinedConstraints = MecanumConstraints(driveConstraints, trackWidth)
 
-    private val startPose = Pose2d(-72.0 + 7.0, -36.0, -90.0.toRadians)
+    private const val halfMat = 12.0
+
+    private val startPose = Pose2d(-halfMat * 6 + 7.0, -halfMat * 3, (-90.0).toRadians)
 
     fun createTrajectory(): ArrayList<Trajectory> {
         val list = ArrayList<Trajectory>()
 
         val builder1 = TrajectoryBuilder(startPose, startPose.heading, combinedConstraints)
 
-//        builder1.splineTo(Vector2d(-48.0, -36.0), -45.0.toRadians)
+
+        val armLength = 7.0 // in inch
+        val alpha = 35.0
+        val beta = (90.0 - alpha) / 2.0
+
+        // add calculate equations here
+        val eg = halfMat
+        val cg = eg / cos(alpha.toRadians)
+        val ag = armLength
+        val ac = cg - ag
+        val ao = ac * tan(beta.toRadians)
+        val bo = ao
+        val fo = ao
+        val ax = armLength * sin(alpha.toRadians)
+        val gx = armLength * cos(alpha.toRadians)
+        val bc = ac
+        val ce = eg * tan(alpha.toRadians)
+        val be = ce - bc
+        val co = ac / cos(beta.toRadians)
+        val cVx = -eg * 2 + ce
+        val cf = co - fo
+        val fh = cf * bo / co
+        val ch = cf * bc / co
+
+
+        // update below 6 variable values
+        val Ax = ax - eg * 2
+        val Ay = -eg * 2 - gx
+        val Fx = cVx - ch
+        val Fy = fh - eg * 3
+        val Bx = be - eg * 2
+        val By = -eg * 3
+
+        print("start    ")
+        print(" / co = ")
+        print( co)
+        print(" / bc = ")
+        print( bc)
+        print(" / ce = ")
+        print( ce)
+
+        print(" / Bx = ")
+        print( Bx)
+        print(" / By = ")
+        print( By)
+        print(" / Fx = ")
+        print( Fx)
+        print(" / Fy = ")
+        print( Fy)
+        print(" / Ax = ")
+        print( Ax)
+        print(" / Ay = ")
+        print( Ay)
+        print("  / ")
+
+        val bB = Pose2d(Bx, By, (-90.0).toRadians)
+        val fF = Pose2d(Fx, Fy, (-90.0/2.0 + alpha/2.0 - 45.0).toRadians)
+        val aA = Pose2d(Ax +0.0, Ay+0.0, (-90 + alpha).toRadians)
+
 
 
         // Small Example Routine
         builder1
             .strafeLeft(24.0)
-            .splineToSplineHeading(Pose2d(-24.0, -36.0, -80.0.toRadians), 0.0)
-            .splineToSplineHeading(Pose2d(-24.0 + 5, -33.0, -70.0.toRadians), 70.0.toRadians)
-            //.splineTo(Vector2d(-48.0 + 6, -36.0 - 6), -45.0.toRadians)
-            //.splineTo(Vector2d(-24.0  + 2, -36.0 + 5.6), 90.0.toRadians + 20.0.toRadians)
-            .splineToLinearHeading(Pose2d(-24.0  + 2, -36.0 + 5.6, -70.0.toRadians), 70.0.toRadians);
-            //.lineToConstantHeading(Vector2d(-24.0  + 2.0,-36.0 + 5.6));
+            .splineToSplineHeading(bB, 0.0)
+            .splineToSplineHeading(fF, (90.0 + alpha).toRadians / 2.0)
+            .splineToSplineHeading(aA, (90.0 +  alpha).toRadians);
+
         list.add(builder1.build())
 /*
+
+       val bB = Pose2d(Bx, By, (-90.0).toRadians)
+        val fF = Pose2d(Fx, Fy, (-90.0 + alpha / 2.0).toRadians)
+        val aA = Pose2d(Ax +0.0, Ay+0.0, (-90 + alpha).toRadians)
+
+        .splineToSplineHeading(bB, 0.0)
+            .splineToSplineHeading(fF, (90.0 + alpha).toRadians / 2.0)
+            .splineToSplineHeading(aA, (90.0 +  alpha).toRadians);
+
+  builder1
+            .strafeLeft(24.0)
+            .splineTo(Vector2d(bB.x, bB.y), 0.0)
+            .splineTo(Vector2d(fF.x, fF.y), (90.0 + alpha).toRadians / 2.0)
+            .splineTo(Vector2d(aA.x, aA.y), (90.0 + alpha).toRadians);
+
+        list.add(builder1.build())
+
         for (i in 0 until 2) {
             val start2Pose = Pose2d(-24.0 + 2, -36.0 + 5.6, -90.0.toRadians + 20.0.toRadians)
             val builder2 = TrajectoryBuilder(start2Pose, startPose.heading, combinedConstraints)
@@ -74,33 +152,14 @@ object TrajectoryGen {
         list.add(builder2.build())
         list.add(builder3.build())
 
-         */
-        //Pose2d(-2 * Params.HALF_MAT + armX, -2 * Params.HALF_MAT + armY, dropOffAngle);
-        val start2Pose = Pose2d(-24.0 + 2, -24.0 - 5.6, -90.0.toRadians + 20.0.toRadians)
-        // parking
-        val p2 = Pose2d(-2.5 * 12, -3 * 12.0, -180.0.toRadians)
-        var p3 = Pose2d(-36.0, - 36 - 10.0, -180.0.toRadians)
-        val parkPose = Pose2d(-36.0, -36.0 - 24, -180.0.toRadians)
 
-        /*
-                traj1 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .splineToSplineHeading(poseParkingEnd1, parkingEndTangent)
-                .splineToSplineHeading(poseParking, parkingEndTangent)
-                .build();
-        drive.followTrajectory(traj1);
          */
-        val builder4 = TrajectoryBuilder(start2Pose, startPose.heading, combinedConstraints)
-        builder4
-            .splineToSplineHeading(p2, -180.0.toRadians)
-            .splineToSplineHeading(p3, -90.0.toRadians)
-            .splineToSplineHeading(parkPose, -90.0.toRadians)
 
-        //list.add(builder4.build())
         return list
     }
 
     fun drawOffbounds() {
-        GraphicsUtil.fillRect(Vector2d(0.0, -63.0), 18.0, 18.0) // robot against the wall
+        GraphicsUtil.fillRect(Vector2d(-72.0 + 7.0, -36.0), 14.0, 15.0) // robot against the wall
     }
 }
 
